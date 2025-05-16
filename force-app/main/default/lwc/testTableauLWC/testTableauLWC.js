@@ -18,6 +18,8 @@ export default class TableauDashboard extends LightningElement {
   @api hideTabs = false;
 
   tableauInitialized = false;
+  _tableau;
+  params = '?:embed=y';
 
   renderedCallback() {
     if (!this.tableauInitialized) {
@@ -37,6 +39,7 @@ export default class TableauDashboard extends LightningElement {
       loadScript(this, this.baseUrl + this.SCRIPT_PATH)
         .then(() => {
           console.log("Custom script loaded successfully");
+          this._tableau = window.tabEmbLib;
         })
         .catch((error) => {
           console.error(
@@ -56,31 +59,34 @@ export default class TableauDashboard extends LightningElement {
   }
 
   initViz() {
-    let container = this.template.querySelector('[data-id="tableauViz"]');
-    console.log(container);
+    const container = this.template.querySelector('.tabVizPlaceholder');
+    const viz = new this._tableau.TableauViz();
+    console.log(viz);
 
-    container.src = this.generateTableauUrl();
-    // container.token = "123";
-    container.height = "1000px";
-    container.width = "100%";
+    viz.src = this.generateTableauUrl();
+    // viz.token = "123";
+    viz.height = "1000px";
+    viz.width = "100%";
 
-    container.addEventListener("vizloaderror", (errorEvent) => {
+    viz.addEventListener("vizloaderror", (errorEvent) => {
       console.log("error loading viz");
       const message = JSON.parse(errorEvent.detail.message);
       console.log("error message @ viz load: " + message);
     });
 
-    container.addEventListener(
+    viz.addEventListener(
       "firstinteractive",
       (onFirstInteractiveEvent) => {
         console.log("viz loaded!");
       }
     );
+
+    container.appendChild(viz);
   }
 
   generateTableauUrl() {
     let url =
-      "https://us-west-2b.online.tableau.com/#/site/atriumnewfall2020/workbooks/2192374/views";
+      "https://us-west-2b.online.tableau.com/#/site/atriumnewfall2020/workbooks/2192374/views" + this.params;
     if (this.recordId) {
       url += `?${this.filterFieldName}=${this.recordId}`;
     }
